@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="logo-section">
+                <div class="logo">📚</div>
+                <h2>LibraryHub</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" onclick="navigateTo('dashboard')">Dashboard</a></li>
+                <li><a href="#" onclick="navigateTo('books')">Browse Books</a></li>
+                <li><a href="#" onclick="navigateTo('myBooks')">My Books</a></li>
+                <li><a href="#" onclick="navigateTo('addBook')" id="addBookNav" style="display:none;">Add Book</a></li>
+                <li><a href="#" onclick="navigateTo('profile')">My Profile</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Library Management System</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-info" id="userInfo">
+                        <span id="userName">Guest</span>
+                        <div class="user-avatar">👤</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Login Section -->
+                <section id="loginSection" class="page active">
+                    <div class="auth-container">
+                        <div class="auth-card">
+                            <h2>Welcome to LibraryHub</h2>
+                            <p class="subtitle">Sign in to continue</p>
+                            
+                            <form onsubmit="handleLogin(event)">
+                                <div class="form-group">
+                                    <label for="loginEmail">Email</label>
+                                    <input type="email" id="loginEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword">Password</label>
+                                    <input type="password" id="loginPassword" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Sign In</button>
+                            </form>
+
+                            <p class="auth-toggle">Don't have an account? 
+                                <a href="#" onclick="toggleAuth()">Register</a>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Register Section -->
+                <section id="registerSection" class="page">
+                    <div class="auth-container">
+                        <div class="auth-card">
+                            <h2>Create Account</h2>
+                            <p class="subtitle">Join LibraryHub today</p>
+                            
+                            <form onsubmit="handleRegister(event)">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="regFirstName">First Name</label>
+                                        <input type="text" id="regFirstName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="regLastName">Last Name</label>
+                                        <input type="text" id="regLastName" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regEmail">Email</label>
+                                    <input type="email" id="regEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regPassword">Password</label>
+                                    <input type="password" id="regPassword" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regPhone">Phone</label>
+                                    <input type="tel" id="regPhone">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Create Account</button>
+                            </form>
+
+                            <p class="auth-toggle">Already have an account? 
+                                <a href="#" onclick="toggleAuth()">Sign In</a>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="page">
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📚</div>
+                            <div class="stat-content">
+                                <h3 id="totalBooksCount">0</h3>
+                                <p>Total Books</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📖</div>
+                            <div class="stat-content">
+                                <h3 id="activeBorrowCount">0</h3>
+                                <p>Books Borrowed</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-content">
+                                <h3 id="memberIdDisplay">-</h3>
+                                <p>Member ID</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3>Recent Activity</h3>
+                        <div id="recentActivityList" class="activity-list">
+                            <p class="no-data">No recent activity</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Browse Books Section -->
+                <section id="books" class="page">
+                    <div class="page-header">
+                        <h2>Browse Books</h2>
+                        <div class="search-bar">
+                            <input type="text" id="searchInput" placeholder="Search books..." onkeyup="searchBooks()">
+                            <button onclick="searchBooks()" class="btn-search">🔍</button>
+                        </div>
+                    </div>
+
+                    <div class="filters">
+                        <select id="categoryFilter" onchange="filterBooks()">
+                            <option value="">All Categories</option>
+                            <option value="Fiction">Fiction</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                            <option value="Science">Science</option>
+                            <option value="History">History</option>
+                            <option value="Biography">Biography</option>
+                            <option value="Technology">Technology</option>
+                        </select>
+                    </div>
+
+                    <div id="booksList" class="books-grid">
+                        <p class="no-data">Loading books...</p>
+                    </div>
+                </section>
+
+                <!-- My Books Section -->
+                <section id="myBooks" class="page">
+                    <div class="page-header">
+                        <h2>My Borrowed Books</h2>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="filterBorrowedBooks('active')">Active</button>
+                        <button class="tab-btn" onclick="filterBorrowedBooks('returned')">Returned</button>
+                    </div>
+
+                    <div id="myBooksList" class="books-table">
+                        <p class="no-data">No books borrowed yet</p>
+                    </div>
+                </section>
+
+                <!-- Add Book Section (Admin/Librarian) -->
+                <section id="addBook" class="page">
+                    <div class="page-header">
+                        <h2>Add New Book</h2>
+                    </div>
+
+                    <form onsubmit="handleAddBook(event)" class="add-book-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bookTitle">Book Title *</label>
+                                <input type="text" id="bookTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bookAuthor">Author *</label>
+                                <input type="text" id="bookAuthor" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bookISBN">ISBN *</label>
+                                <input type="text" id="bookISBN" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bookPublisher">Publisher *</label>
+                                <input type="text" id="bookPublisher" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bookCategory">Category</label>
+                                <select id="bookCategory">
+                                    <option value="Other">Other</option>
+                                    <option value="Fiction">Fiction</option>
+                                    <option value="Non-Fiction">Non-Fiction</option>
+                                    <option value="Science">Science</option>
+                                    <option value="History">History</option>
+                                    <option value="Biography">Biography</option>
+                                    <option value="Technology">Technology</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="bookCopies">Total Copies *</label>
+                                <input type="number" id="bookCopies" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bookPages">Pages</label>
+                                <input type="number" id="bookPages" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="bookLanguage">Language</label>
+                                <input type="text" id="bookLanguage" value="English">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bookDescription">Description</label>
+                            <textarea id="bookDescription" rows="4"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Add Book</button>
+                    </form>
+                </section>
+
+                <!-- Profile Section -->
+                <section id="profile" class="page">
+                    <div class="page-header">
+                        <h2>My Profile</h2>
+                    </div>
+
+                    <form onsubmit="handleUpdateProfile(event)" class="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="profileFirstName">First Name</label>
+                                <input type="text" id="profileFirstName">
+                            </div>
+                            <div class="form-group">
+                                <label for="profileLastName">Last Name</label>
+                                <input type="text" id="profileLastName">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="profileEmail">Email</label>
+                            <input type="email" id="profileEmail" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="profilePhone">Phone</label>
+                            <input type="tel" id="profilePhone">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="profileCity">City</label>
+                                <input type="text" id="profileCity">
+                            </div>
+                            <div class="form-group">
+                                <label for="profileCountry">Country</label>
+                                <input type="text" id="profileCountry">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Book Details -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBookModal()">&times;</span>
+            <div id="bookModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
