@@ -13,14 +13,19 @@
             <div class="logo-section">
                 <div class="logo">📚</div>
                 <h2>LibraryHub</h2>
+                <p class="team-name">Team Raw</p>
             </div>
-            <ul class="nav-menu">
-                <li><a href="#" onclick="navigateTo('dashboard')">Dashboard</a></li>
-                <li><a href="#" onclick="navigateTo('books')">Browse Books</a></li>
-                <li><a href="#" onclick="navigateTo('myBooks')">My Books</a></li>
-                <li><a href="#" onclick="navigateTo('addBook')" id="addBookNav" style="display:none;">Add Book</a></li>
-                <li><a href="#" onclick="navigateTo('profile')">My Profile</a></li>
-                <li><a href="#" onclick="logout()">Logout</a></li>
+            <ul class="nav-menu" id="navMenu">
+                <li id="navHome"><a href="#" onclick="navigateTo('home')">Home</a></li>
+                <li id="navDashboard" style="display:none;"><a href="#" onclick="navigateTo('dashboard')">Dashboard</a></li>
+                <li id="navBooks" style="display:none;"><a href="#" onclick="navigateTo('books')">Browse Books</a></li>
+                <li id="navMyBooks" style="display:none;"><a href="#" onclick="navigateTo('myBooks')">My Books</a></li>
+                <li id="navAddBook" style="display:none;"><a href="#" onclick="navigateTo('addBook')">Add Book</a></li>
+                <li id="navManageUsers" style="display:none;"><a href="#" onclick="navigateTo('manageUsers')">Manage Users</a></li>
+                <li id="navProfile" style="display:none;"><a href="#" onclick="navigateTo('profile')">My Profile</a></li>
+                <li id="navSignIn"><a href="#" onclick="navigateTo('login')">Sign In</a></li>
+                <li id="navSignUp"><a href="#" onclick="navigateTo('register')">Sign Up</a></li>
+                <li id="navLogout" style="display:none;"><a href="#" onclick="logout()">Sign Out</a></li>
             </ul>
         </nav>
 
@@ -42,6 +47,55 @@
 
             <!-- Content Area -->
             <div class="content">
+                <!-- Home/Landing Page -->
+                <section id="home" class="page active">
+                    <div class="landing-container">
+                        <div class="landing-hero">
+                            <div class="hero-logo">📚</div>
+                            <h1>Welcome to LibraryHub</h1>
+                            <p class="hero-subtitle">Your Digital Library Management Solution</p>
+                            <p class="team-logo">🎓 Team Raw</p>
+                            <div class="hero-actions">
+                                <button class="btn btn-primary" onclick="navigateTo('register')">Get Started</button>
+                                <button class="btn btn-secondary" onclick="navigateTo('login')">Sign In</button>
+                            </div>
+                        </div>
+
+                        <div class="featured-section">
+                            <h2>Featured Books</h2>
+                            <div id="featuredBooks" class="books-grid">
+                                <p class="no-data">Loading books...</p>
+                            </div>
+                        </div>
+
+                        <div class="features-section">
+                            <h2>Why Choose LibraryHub?</h2>
+                            <div class="features-grid">
+                                <div class="feature-card">
+                                    <div class="feature-icon">📖</div>
+                                    <h3>Vast Collection</h3>
+                                    <p>Access thousands of books across all genres</p>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">🔍</div>
+                                    <h3>Easy Search</h3>
+                                    <p>Find your favorite books quickly and efficiently</p>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">⚡</div>
+                                    <h3>Quick Borrowing</h3>
+                                    <p>Borrow books instantly with just a few clicks</p>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">📊</div>
+                                    <h3>Track History</h3>
+                                    <p>Keep track of all your borrowed books</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Login Section -->
                 <section id="loginSection" class="page active">
                     <div class="auth-container">
@@ -295,6 +349,32 @@
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
                 </section>
+
+                <!-- Manage Users Section (Admin only) -->
+                <section id="manageUsers" class="page">
+                    <div class="page-header">
+                        <h2>Manage Users</h2>
+                        <button class="btn btn-primary" onclick="showAddUserModal()">Add New User</button>
+                    </div>
+
+                    <div id="usersTable" class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Phone</th>
+                                    <th>Member ID</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="6">Loading users...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -304,6 +384,52 @@
         <div class="modal-content">
             <span class="close" onclick="closeBookModal()">&times;</span>
             <div id="bookModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal for User Add/Edit -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUserModal()">&times;</span>
+            <div id="userModalBody">
+                <h2 id="userModalTitle">Add User</h2>
+                <form onsubmit="handleUserSubmit(event)" id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userFirstName">First Name *</label>
+                            <input type="text" id="userFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userLastName">Last Name *</label>
+                            <input type="text" id="userLastName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email *</label>
+                        <input type="email" id="userEmail" required>
+                    </div>
+                    <div class="form-group" id="passwordGroup">
+                        <label for="userPassword">Password *</label>
+                        <input type="password" id="userPassword">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userPhone">Phone</label>
+                            <input type="tel" id="userPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Role *</label>
+                            <select id="userRole" required>
+                                <option value="user">User</option>
+                                <option value="librarian">Librarian</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </form>
+            </div>
         </div>
     </div>
 

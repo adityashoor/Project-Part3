@@ -7,6 +7,7 @@ let userBorrowRecords = [];
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   loadBooks();
+  loadFeaturedBooks();
 });
 
 // Check authentication
@@ -20,8 +21,8 @@ function checkAuth() {
     showAuthenticatedNav();
     navigateTo('dashboard');
   } else {
-    showAuthNav();
-    navigateTo('login');
+    showPublicNav();
+    navigateTo('home');
   }
 }
 
@@ -31,21 +32,44 @@ function updateUserUI() {
   const memberIdDisplay = document.getElementById('memberIdDisplay');
   if (userName && currentUser) {
     userName.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-    memberIdDisplay.textContent = currentUser.memberId || '-';
+    if (memberIdDisplay) {
+      memberIdDisplay.textContent = currentUser.memberId || '-';
+    }
   }
 }
 
 // Show authenticated navigation
 function showAuthenticatedNav() {
-  const sidebar = document.querySelector('.sidebar');
-  if (currentUser && currentUser.role === 'librarian' || currentUser.role === 'admin') {
-    document.getElementById('addBookNav').style.display = 'block';
+  document.getElementById('navHome').style.display = 'none';
+  document.getElementById('navDashboard').style.display = 'block';
+  document.getElementById('navBooks').style.display = 'block';
+  document.getElementById('navMyBooks').style.display = 'block';
+  document.getElementById('navProfile').style.display = 'block';
+  document.getElementById('navSignIn').style.display = 'none';
+  document.getElementById('navSignUp').style.display = 'none';
+  document.getElementById('navLogout').style.display = 'block';
+  
+  if (currentUser && (currentUser.role === 'librarian' || currentUser.role === 'admin')) {
+    document.getElementById('navAddBook').style.display = 'block';
+  }
+  
+  if (currentUser && currentUser.role === 'admin') {
+    document.getElementById('navManageUsers').style.display = 'block';
   }
 }
 
-// Show auth navigation
-function showAuthNav() {
-  document.getElementById('addBookNav').style.display = 'none';
+// Show public navigation
+function showPublicNav() {
+  document.getElementById('navHome').style.display = 'block';
+  document.getElementById('navDashboard').style.display = 'none';
+  document.getElementById('navBooks').style.display = 'none';
+  document.getElementById('navMyBooks').style.display = 'none';
+  document.getElementById('navAddBook').style.display = 'none';
+  document.getElementById('navManageUsers').style.display = 'none';
+  document.getElementById('navProfile').style.display = 'none';
+  document.getElementById('navSignIn').style.display = 'block';
+  document.getElementById('navSignUp').style.display = 'block';
+  document.getElementById('navLogout').style.display = 'none';
 }
 
 // Toggle authentication sections
@@ -138,6 +162,45 @@ async function loadBooks() {
   } catch (error) {
     console.error('Error loading books:', error);
   }
+}
+
+// Load featured books for landing page
+async function loadFeaturedBooks() {
+  try {
+    const response = await fetch(`${API_URL}/books`);
+    const data = await response.json();
+
+    if (data.success) {
+      const featuredBooks = data.data.slice(0, 6); // Show first 6 books
+      displayFeaturedBooks(featuredBooks);
+    }
+  } catch (error) {
+    console.error('Error loading featured books:', error);
+  }
+}
+
+// Display featured books on landing page
+function displayFeaturedBooks(books) {
+  const featuredBooksList = document.getElementById('featuredBooks');
+  
+  if (!featuredBooksList) return;
+
+  if (books.length === 0) {
+    featuredBooksList.innerHTML = '<p class="no-data">No books available</p>';
+    return;
+  }
+
+  featuredBooksList.innerHTML = books.map(book => `
+    <div class="book-card">
+      <div class="book-cover">📖</div>
+      <div class="book-info">
+        <h3>${book.title}</h3>
+        <p class="book-author">by ${book.author}</p>
+        <span class="book-category">${book.category}</span>
+        <p class="book-copies">Available: ${book.availableCopies}/${book.totalCopies}</p>
+      </div>
+    </div>
+  `).join('');
 }
 
 // Display books
@@ -522,7 +585,7 @@ async function handleUpdateProfile(event) {
 // Navigate to page
 function navigateTo(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const pageElement = document.getElementById(page);
+  const pageElement = document.getElementById(page === 'login' ? 'loginSection' : page === 'register' ? 'registerSection' : page);
   if (pageElement) {
     pageElement.classList.add('active');
 
@@ -534,12 +597,16 @@ function navigateTo(page) {
       loadUserBorrowRecords();
     } else if (page === 'profile') {
       loadProfileData();
+    } else if (page === 'manageUsers') {
+      loadUsers();
+    } else if (page === 'home') {
+      loadFeaturedBooks();
     }
   }
 
   // Close sidebar on mobile
   const sidebar = document.querySelector('.sidebar');
-  if (sidebar.classList.contains('active')) {
+  if (sidebar && sidebar.classList.contains('active')) {
     sidebar.classList.remove('active');
   }
 }
@@ -566,8 +633,12 @@ function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     currentUser = null;
-    showAuthNav();
-    navigateTo('login');
+    
+    // Clear user info from navbar
+    document.getElementById('userName').textContent = 'Guest';
+    
+    showPublicNav();
+    navigateTo('home');
     showToast('Logged out successfully!', 'success');
   }
 }
@@ -588,4 +659,184 @@ document.addEventListener('click', (e) => {
   if (e.target.id === 'bookModal') {
     closeBookModal();
   }
+  if (e.target.id === 'userModal') {
+    closeUserModal();
+  }
 });
+
+// ========== USER MANAGEMENT FUNCTIONS (Admin) ==========
+
+// Load all users
+async function loadUsers() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    const response = await fetch(`${API_URL}/auth/users`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      displayUsers(data.data);
+    } else {
+      showToast(data.message || 'Failed to load users', 'error');
+    }
+  } catch (error) {
+    console.error('Error loading users:', error);
+    showToast('Error loading users', 'error');
+  }
+}
+
+// Display users in table
+function displayUsers(users) {
+  const tbody = document.getElementById('usersTableBody');
+  
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6">No users found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = users.map(user => `
+    <tr>
+      <td>${user.firstName} ${user.lastName}</td>
+      <td>${user.email}</td>
+      <td><span class="badge">${user.role}</span></td>
+      <td>${user.phone || '-'}</td>
+      <td>${user.memberId || '-'}</td>
+      <td class="table-actions">
+        <button class="btn btn-primary btn-small" onclick="editUser('${user._id}')">Edit</button>
+        <button class="btn btn-danger btn-small" onclick="deleteUser('${user._id}')">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Show add user modal
+function showAddUserModal() {
+  document.getElementById('userModalTitle').textContent = 'Add New User';
+  document.getElementById('userForm').reset();
+  document.getElementById('userId').value = '';
+  document.getElementById('passwordGroup').style.display = 'block';
+  document.getElementById('userPassword').required = true;
+  document.getElementById('userModal').style.display = 'block';
+}
+
+// Edit user
+async function editUser(userId) {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    const response = await fetch(`${API_URL}/auth/users`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      const user = data.data.find(u => u._id === userId);
+      if (user) {
+        document.getElementById('userModalTitle').textContent = 'Edit User';
+        document.getElementById('userId').value = user._id;
+        document.getElementById('userFirstName').value = user.firstName;
+        document.getElementById('userLastName').value = user.lastName;
+        document.getElementById('userEmail').value = user.email;
+        document.getElementById('userPhone').value = user.phone || '';
+        document.getElementById('userRole').value = user.role;
+        document.getElementById('passwordGroup').style.display = 'none';
+        document.getElementById('userPassword').required = false;
+        document.getElementById('userModal').style.display = 'block';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading user:', error);
+    showToast('Error loading user data', 'error');
+  }
+}
+
+// Handle user submit (add or update)
+async function handleUserSubmit(event) {
+  event.preventDefault();
+  
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const userId = document.getElementById('userId').value;
+  const userData = {
+    firstName: document.getElementById('userFirstName').value,
+    lastName: document.getElementById('userLastName').value,
+    email: document.getElementById('userEmail').value,
+    phone: document.getElementById('userPhone').value,
+    role: document.getElementById('userRole').value
+  };
+
+  if (!userId) {
+    userData.password = document.getElementById('userPassword').value;
+  }
+
+  try {
+    const url = userId ? `${API_URL}/auth/users/${userId}` : `${API_URL}/auth/register`;
+    const method = userId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(userData)
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showToast(userId ? 'User updated successfully!' : 'User created successfully!', 'success');
+      closeUserModal();
+      loadUsers();
+    } else {
+      showToast(data.message || 'Operation failed', 'error');
+    }
+  } catch (error) {
+    console.error('Error saving user:', error);
+    showToast('Error saving user', 'error');
+  }
+}
+
+// Delete user
+async function deleteUser(userId) {
+  if (!confirm('Are you sure you want to delete this user?')) return;
+
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    const response = await fetch(`${API_URL}/auth/users/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showToast('User deleted successfully!', 'success');
+      loadUsers();
+    } else {
+      showToast(data.message || 'Failed to delete user', 'error');
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    showToast('Error deleting user', 'error');
+  }
+}
+
+// Close user modal
+function closeUserModal() {
+  document.getElementById('userModal').style.display = 'none';
+}
